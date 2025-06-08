@@ -1,0 +1,9 @@
+services:
+  kali:
+    image: kalilinux/kali-rolling
+    privileged: true
+    tty: true
+    stdin_open: true
+    network_mode: host
+    volumes:
+      - ./kali-data:/root
