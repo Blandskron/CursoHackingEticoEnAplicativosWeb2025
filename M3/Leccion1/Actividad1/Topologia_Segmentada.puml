@@ -1,0 +1,47 @@
+@startuml Red_Mejorada_Topologia_Segmentada
+title Red Mejorada – Topología Segmentada
+
+node "Router Principal" as Router
+node "Firewall" as FW
+node "Switch Capa 3" as SW3
+
+package "VLAN Administración" {
+  node "PC Admin 1"
+  node "PC Admin 2"
+}
+
+package "VLAN Producción" {
+  node "PLC1"
+  node "PLC2"
+}
+
+package "VLAN IoT/M2M" {
+  node "Sensor IoT"
+  node "PLC IoT"
+}
+
+package "VLAN Wi-Fi" {
+  node "Access Point"
+  node "Laptop Wi-Fi"
+}
+
+package "VLAN DMZ" {
+  node "Web Server"
+  node "DNS Server"
+}
+
+Router --> FW : G0/0 → G0/1
+FW --> SW3 : G0/2 → G1/1
+
+SW3 --> "PC Admin 1" : Fa1/1 → Fa0
+SW3 --> "PC Admin 2" : Fa1/2 → Fa0
+SW3 --> "PLC1" : Fa2/1 → Fa0
+SW3 --> "PLC2" : Fa2/2 → Fa0
+SW3 --> "Sensor IoT" : Fa3/1 → Fa0
+SW3 --> "PLC IoT" : Fa3/2 → Fa0
+SW3 --> "Access Point" : Fa4/1 → Fa0
+SW3 --> "Laptop Wi-Fi" : Fa4/2 → Wi-Fi NIC
+SW3 --> "Web Server" : Fa5/1 → Fa0
+SW3 --> "DNS Server" : Fa5/2 → Fa0
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml Topologia_Plana
+title Red Inicial – Topología Plana
+
+node "Router R1" as R1
+node "Switch S1 (Capa 2)" as S1
+node "PC0 - Usuario" as PC0
+node "PC1 - Usuario" as PC1
+node "PLC0 - Producción" as PLC0
+node "Server0 - Servicios" as Server0
+node "AP0 - WiFi" as AP0
+
+R1 --> S1 : G0/0 → F0/1
+S1 --> PC0 : F0/2 → F0
+S1 --> PC1 : F0/3 → F0
+S1 --> PLC0 : F0/4 → F0
+S1 --> Server0 : F0/5 → F0
+S1 --> AP0 : F0/6 → F0
+
+@enduml
