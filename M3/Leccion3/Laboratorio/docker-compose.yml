@@ -1,0 +1,14 @@
+
+services:
+  bind:
+    image: internetsystemsconsortium/bind9:9.18
+    container_name: dns-server
+    volumes:
+      - ./named.conf.options:/etc/bind/named.conf.options
+      - ./named.conf.local:/etc/bind/named.conf.local
+      - ./db.empresa.local:/var/cache/bind/db.empresa.local
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    cap_add:
+      - NET_ADMIN

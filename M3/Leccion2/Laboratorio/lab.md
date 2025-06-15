@@ -1,4 +1,4 @@
-### Archivo: `docker-compose.yml`
+### Archivo completo `docker-compose.yml` actualizado
 
 ```yaml
 version: "3.9"
@@ -15,13 +15,7 @@ services:
     privileged: true  # Necesario para usar iptables dentro del contenedor
     networks:
       vlan10:
-        ipv4_address: 192.168.10.1
-      vlan20:
-        ipv4_address: 192.168.20.1
-      vlan30:
-        ipv4_address: 192.168.30.1
-      vlan40:
-        ipv4_address: 192.168.40.1
+        ipv4_address: 192.168.110.254
 
   # ======================
   # CLIENTES VLAN 10 (ADMINISTRACIÓN)
@@ -32,7 +26,7 @@ services:
     command: ["sh", "-c", "apk add iputils && sleep infinity"]
     networks:
       vlan10:
-        ipv4_address: 192.168.10.10
+        ipv4_address: 192.168.110.10
 
   # ======================
   # CLIENTES VLAN 20 (DESARROLLO)
@@ -43,7 +37,7 @@ services:
     command: ["sh", "-c", "apk add iputils && sleep infinity"]
     networks:
       vlan20:
-        ipv4_address: 192.168.20.10
+        ipv4_address: 192.168.120.10
 
   # ======================
   # CLIENTES VLAN 30 (SOPORTE TÉCNICO)
@@ -54,7 +48,7 @@ services:
     command: ["sh", "-c", "apk add iputils && sleep infinity"]
     networks:
       vlan30:
-        ipv4_address: 192.168.30.10
+        ipv4_address: 192.168.130.10
 
   # ======================
   # SERVIDOR INTERNO VLAN 40
@@ -65,7 +59,7 @@ services:
     command: ["sh", "-c", "apk add iputils && sleep infinity"]
     networks:
       vlan40:
-        ipv4_address: 192.168.40.10
+        ipv4_address: 192.168.140.10
 
 # ======================
 # DEFINICIÓN DE VLANs (Redes bridge de Docker)
@@ -76,70 +70,93 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.10.0/24
+        - subnet: 192.168.110.0/24
 
   vlan20:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.20.0/24
+        - subnet: 192.168.120.0/24
 
   vlan30:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.30.0/24
+        - subnet: 192.168.130.0/24
 
   vlan40:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.40.0/24
+        - subnet: 192.168.140.0/24
 ```
 
 ---
 
-### 🔧 Comandos para aplicar políticas de red desde el contenedor `router`
+### Conecta el `router` a las demás redes
 
-1. Ingresa al contenedor:
-
-```bash
-docker exec -it router sh
-```
-
-2. Establece las reglas de `iptables` para segmentar tráfico:
-
-```sh
-# Política por defecto: bloquea el tráfico inter-VLAN
-iptables -P FORWARD DROP
-
-# Permitir tráfico de administración a todas las VLANs
-iptables -A FORWARD -s 192.168.10.0/24 -j ACCEPT
-
-# Bloquear tráfico entre Desarrollo y Soporte Técnico
-iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.30.0/24 -j DROP
-iptables -A FORWARD -s 192.168.30.0/24 -d 192.168.20.0/24 -j DROP
-
-# Permitir acceso a Servidores desde cualquier VLAN
-iptables -A FORWARD -d 192.168.40.0/24 -j ACCEPT
-```
-
-3. (Opcional) Guardar reglas en un archivo:
-
-```sh
-iptables-save > /etc/iptables.rules
-```
-
----
-
-### Cómo levantar el laboratorio
+Después de levantar con:
 
 ```bash
 docker compose up -d
 ```
 
-Una vez levantado, puedes:
+Ejecuta:
 
-* Hacer `ping` entre contenedores.
-* Probar rutas, simular tráfico y aplicar nuevas políticas.
-* Añadir herramientas como `tcpdump`, `nmap`, `curl`, etc.
+```bash
+docker network connect --ip 192.168.120.254 laboratorio_vlan20 router
+docker network connect --ip 192.168.130.254 laboratorio_vlan30 router
+docker network connect --ip 192.168.140.254 laboratorio_vlan40 router
+```
+
+---
+
+### Configura reglas de `iptables` desde dentro del router
+
+```bash
+docker exec -it router sh
+```
+
+Y dentro:
+
+```sh
+# Política por defecto: bloquear tráfico entre contenedores
+iptables -P FORWARD DROP
+
+# Permitir administración a todas las VLANs
+iptables -A FORWARD -s 192.168.110.0/24 -j ACCEPT
+
+# Bloquear tráfico entre Desarrollo y Soporte Técnico
+iptables -A FORWARD -s 192.168.120.0/24 -d 192.168.130.0/24 -j DROP
+iptables -A FORWARD -s 192.168.130.0/24 -d 192.168.120.0/24 -j DROP
+
+# Permitir acceso a servidor interno desde todas las VLANs
+iptables -A FORWARD -d 192.168.140.0/24 -j ACCEPT
+```
+
+---
+
+### (Opcional) Guardar las reglas:
+
+```sh
+iptables-save > /etc/iptables.rules
+```
+
+Excelente idea. Puedes agregar un **comando final de diagnóstico** para verificar fácilmente que tu laboratorio quedó bien configurado y que las reglas de `iptables` están aplicadas como esperas.
+
+---
+
+### Mostrar el estado general del router
+
+Dentro del contenedor `router`, ejecuta estos comandos:
+
+```sh
+# Mostrar interfaces de red y sus IPs
+ip a
+
+# Mostrar tabla de rutas del router
+ip route
+
+# Mostrar reglas activas de iptables
+iptables -L -v --line-numbers
+```

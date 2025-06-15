@@ -1,0 +1,4 @@
+zone "empresa.local" {
+    type master;
+    file "/var/cache/bind/db.empresa.local";
+};
