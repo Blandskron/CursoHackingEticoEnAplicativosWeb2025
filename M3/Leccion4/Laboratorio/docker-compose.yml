@@ -1,0 +1,109 @@
+version: '3.9'
+
+services:
+
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true 
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"  # Dashboard UI en http://localhost:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: always
+    ports:
+      - "9000:9000"  # expone la UI también por fuera de Traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.middlewares.portainer-strip.stripprefix.prefixes=/portainer"
+      - "traefik.http.routers.portainer.middlewares=portainer-strip"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - web
+
+  # App 1 - Saludo (HTML)
+  app_saludo:
+    image: nginx:alpine
+    container_name: app_saludo
+    volumes:
+      - ./saludo:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.saludo.rule=PathPrefix(`/saludo`)"
+      - "traefik.http.routers.saludo.entrypoints=web"
+      - "traefik.http.services.saludo.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.saludo-strip.stripprefix.prefixes=/saludo"
+      - "traefik.http.routers.saludo.middlewares=saludo-strip"
+    networks:
+      - web
+
+  # App 2 - Usuarios (Flask + PostgreSQL)
+  app_usuarios:
+    image: python:3.11
+    container_name: app_usuarios
+    depends_on:
+      - postgres
+    working_dir: /app
+    volumes:
+      - ./app_usuarios:/app
+    command: >
+      sh -c "pip install flask psycopg2-binary &&
+             python app.py"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.usuarios.rule=PathPrefix(`/usuarios`)"
+      - "traefik.http.routers.usuarios.entrypoints=web"
+      - "traefik.http.services.usuarios.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.usuarios-strip.stripprefix.prefixes=/usuarios"
+      - "traefik.http.routers.usuarios.middlewares=usuarios-strip"
+    networks:
+      - web
+
+  # PostgreSQL con init.sql embebido
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_DB: usersdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - web
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpass
+    ports:
+      - "5050:80"
+    networks:
+      - web
+
+volumes:
+  portainer_data:
+  pgdata:
+
+networks:
+  web:
+    driver: bridge
