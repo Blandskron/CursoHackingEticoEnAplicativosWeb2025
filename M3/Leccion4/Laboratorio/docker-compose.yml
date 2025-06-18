@@ -12,7 +12,7 @@ services:
       - --entrypoints.web.address=:80
     ports:
       - "80:80"
-      - "8080:8080"  # Dashboard UI en http://localhost:8080
+      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -23,7 +23,7 @@ services:
     container_name: portainer
     restart: always
     ports:
-      - "9000:9000"  # expone la UI también por fuera de Traefik
+      - "9000:9000"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)"
@@ -69,7 +69,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.usuarios.rule=PathPrefix(`/usuarios`)"
       - "traefik.http.routers.usuarios.entrypoints=web"
-      - "traefik.http.services.usuarios.loadbalancer.server.port=5000"
+      - "traefik.http.services.usuarios.loadbalancer.server.port=80"
       - "traefik.http.middlewares.usuarios-strip.stripprefix.prefixes=/usuarios"
       - "traefik.http.routers.usuarios.middlewares=usuarios-strip"
     networks:
