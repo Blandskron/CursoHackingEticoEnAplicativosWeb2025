@@ -1,0 +1,67 @@
+services:
+
+  router:
+    image: alpine
+    container_name: router
+    command: ["sh", "-c", "apk add iptables iproute2 iputils && sleep infinity"]
+    privileged: true
+    networks:
+      admin_net:
+        ipv4_address: 192.168.100.30
+
+  admin_pc:
+    image: alpine
+    container_name: admin_pc
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      admin_net:
+        ipv4_address: 192.168.100.10
+
+  finance_pc:
+    image: alpine
+    container_name: finance_pc
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      finance_net:
+        ipv4_address: 192.168.100.34
+
+  hr_pc:
+    image: alpine
+    container_name: hr_pc
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      hr_net:
+        ipv4_address: 192.168.100.66
+
+  prod_pc:
+    image: alpine
+    container_name: prod_pc
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      prod_net:
+        ipv4_address: 192.168.100.98
+
+networks:
+  admin_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/27
+
+  finance_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.32/27
+
+  hr_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.64/27
+
+  prod_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.96/27
