@@ -1,0 +1,35 @@
+@startuml
+title Segmentación de Red con VLANs y Enrutamiento Inter-VLAN
+
+!define RECTANGLE class
+
+RECTANGLE PC_Admin {
+  :VLAN 10;
+  :IP: 192.168.10.10/24;
+  :GW: 192.168.10.1;
+}
+
+RECTANGLE PC_Finanzas {
+  :VLAN 20;
+  :IP: 192.168.20.10/24;
+  :GW: 192.168.20.1;
+}
+
+RECTANGLE Switch {
+  :Switch Gestionable;
+  :fa0/1 → VLAN 10;
+  :fa0/2 → VLAN 20;
+  :fa0/24 → trunk;
+}
+
+RECTANGLE Router {
+  :Router-on-a-Stick;
+  :g0/0.10 → 192.168.10.1/24;
+  :g0/0.20 → 192.168.20.1/24;
+}
+
+PC_Admin --> Switch : fa0/1
+PC_Finanzas --> Switch : fa0/2
+Switch --> Router : fa0/24 ↔ g0/0 (trunk)
+
+@enduml

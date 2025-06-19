@@ -1,0 +1,49 @@
+@startuml
+title Diagrama de VLANs con Enrutamiento Inter-VLAN
+
+!define RECTANGLE class
+
+RECTANGLE PC1 {
+  :VLAN 10;
+  :IP 192.168.1.2/26;
+}
+
+RECTANGLE PC2 {
+  :VLAN 20;
+  :IP 192.168.1.66/26;
+}
+
+RECTANGLE PC3 {
+  :VLAN 30;
+  :IP 192.168.1.130/26;
+}
+
+RECTANGLE PC4 {
+  :VLAN 40;
+  :IP 192.168.1.194/26;
+}
+
+RECTANGLE Switch {
+  :Switch Gestionable;
+  :fa0/1 - VLAN 10;
+  :fa0/2 - VLAN 20;
+  :fa0/3 - VLAN 30;
+  :fa0/4 - VLAN 40;
+  :fa0/24 - trunk;
+}
+
+RECTANGLE Router {
+  :Router-on-a-Stick;
+  :g0/0.10 - 192.168.1.1/26;
+  :g0/0.20 - 192.168.1.65/26;
+  :g0/0.30 - 192.168.1.129/26;
+  :g0/0.40 - 192.168.1.193/26;
+}
+
+PC1 --> Switch : fa0/1
+PC2 --> Switch : fa0/2
+PC3 --> Switch : fa0/3
+PC4 --> Switch : fa0/4
+Switch --> Router : fa0/24 ↔ g0/0 (trunk)
+
+@enduml
