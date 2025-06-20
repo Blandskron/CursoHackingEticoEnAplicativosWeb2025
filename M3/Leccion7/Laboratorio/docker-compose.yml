@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   auth-service:
     build: ./auth-service
@@ -76,13 +74,24 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: es01
     environment:
-      - discovery.type=single-node
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - cluster.initial_master_nodes=es01
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
     ports:
-      - '9300:9200' # Puerto nuevo sugerido
+      - "9200:9200"
     networks:
       - monitoring_net
-    restart: unless-stopped
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.12.2
@@ -180,3 +189,7 @@ networks:
   internal_net:
   monitoring_net:
   gateway_net:
+  elastic: 
+
+volumes:
+  data01:
