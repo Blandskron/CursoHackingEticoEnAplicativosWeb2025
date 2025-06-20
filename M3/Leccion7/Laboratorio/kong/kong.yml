@@ -1,0 +1,22 @@
+_format_version: "2.1"
+services:
+  - name: auth
+    url: http://auth-service:8000
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+
+  - name: user
+    url: http://user-service:8001
+    routes:
+      - name: user-route
+        paths:
+          - /user
+
+  - name: product
+    url: http://product-service:8002
+    routes:
+      - name: product-route
+        paths:
+          - /product

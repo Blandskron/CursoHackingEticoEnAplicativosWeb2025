@@ -1,0 +1,182 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: ./auth-service
+    ports:
+      - '8000:8000'
+    networks:
+      - internal_net
+    restart: unless-stopped
+
+  user-service:
+    build: ./user-service
+    ports:
+      - '8001:8001'
+    networks:
+      - internal_net
+    restart: unless-stopped
+
+  product-service:
+    build: ./product-service
+    ports:
+      - '8002:8002'
+    networks:
+      - internal_net
+    restart: unless-stopped
+
+  kong:
+    image: kong:3.5
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
+      - KONG_PORTAL_GUI_HOST=localhost:8003
+      - KONG_PORT_MAPS=8443:443,8003:80
+    volumes:
+      - ./kong/kong.yml:/usr/local/kong/declarative/kong.yml
+    ports:
+      - '8003:8000'
+      - '8443:8443'
+      - '8004:8001'
+    networks:
+      - gateway_net
+      - internal_net
+    restart: unless-stopped
+
+  opa:
+    build: ./opa
+    volumes:
+      - ./opa/policies:/policies
+    ports:
+      - '9600:8181'
+    networks:
+      - gateway_net
+    restart: unless-stopped
+
+  filebeat:
+    build: ./filebeat
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - monitoring_net
+    depends_on:
+      - logstash
+    restart: unless-stopped
+
+  logstash:
+    build: ./logstash
+    ports:
+      - '5044:5044'
+    networks:
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    environment:
+      - discovery.type=single-node
+    ports:
+      - '9300:9200' # Puerto nuevo sugerido
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.2
+    ports:
+      - '5601:5601'
+    networks:
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  netdata:
+    image: netdata/netdata:latest
+    ports:
+      - '19999:19999'
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - '9400:9400' # Puerto externo cambiado de 9091 → 9092 para evitar conflictos
+    volumes:
+      - ./prometheus:/etc/prometheus
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=changeme
+    ports:
+      - '3000:3000'
+    networks:
+      - monitoring_net
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    ports:
+      - '16686:16686'
+      - '6831:6831/udp'
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - '8080:8080'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+
+  falco:
+    image: falcosecurity/falco:latest
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - /dev:/host/dev
+      - /proc:/host/proc:ro
+      - /boot:/host/boot:ro
+      - /lib/modules:/host/lib/modules:ro
+      - /usr:/host/usr:ro
+      - ./falco/falco_rules.local.yaml:/etc/falco/falco_rules.local.yaml:ro
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+
+  suricata:
+    image: jasonish/suricata:latest
+    network_mode: host
+    volumes:
+      - ./suricata:/etc/suricata
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+
+networks:
+  internal_net:
+  monitoring_net:
+  gateway_net:

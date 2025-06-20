@@ -1,0 +1,6 @@
+- rule: Terminal shell in container
+  desc: Detect shell running in container
+  condition: container and shell_procs and not proc.name in ("resty", "kong", "nginx", "luarocks")
+  output: "Shell spawned in container (user=%user.name command=%proc.cmdline container_id=%container.id image=%container.image.repository)"
+  priority: WARNING
+  tags: [container, shell]
