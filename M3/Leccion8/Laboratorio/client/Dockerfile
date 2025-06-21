@@ -1,5 +1,3 @@
-FROM debian:stable-slim
-
-RUN apt update && apt install -y iproute2 iputils-ping net-tools
-
+FROM alpine:latest
+RUN apk update && apk add iputils bash
 CMD ["tail", "-f", "/dev/null"]

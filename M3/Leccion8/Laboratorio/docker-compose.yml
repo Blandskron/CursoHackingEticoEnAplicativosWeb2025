@@ -1,70 +1,81 @@
-version: '3.9'
+version: "3.9"
 
 services:
-
-  router:
-    build: ./router
-    privileged: true
-    networks:
-      vlan10:
-        ipv4_address: 192.168.1.1
-      vlan20:
-        ipv4_address: 192.168.1.65
-      vlan30:
-        ipv4_address: 192.168.1.129
-      vlan40:
-        ipv4_address: 192.168.1.193
-
   pc1:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
     container_name: pc1
-    privileged: true
     networks:
-      vlan10:
-        ipv4_address: 192.168.1.10
+      laboratorio_vlan10:
+        ipv4_address: 10.100.10.10
 
   pc2:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
     container_name: pc2
-    privileged: true
     networks:
-      vlan20:
-        ipv4_address: 192.168.1.70
+      laboratorio_vlan20:
+        ipv4_address: 10.100.20.10
 
   pc3:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
     container_name: pc3
-    privileged: true
     networks:
-      vlan30:
-        ipv4_address: 192.168.1.140
+      laboratorio_vlan30:
+        ipv4_address: 10.100.30.10
 
   pc4:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
     container_name: pc4
-    privileged: true
     networks:
-      vlan40:
-        ipv4_address: 192.168.1.200
+      laboratorio_vlan40:
+        ipv4_address: 10.100.40.10
+
+  router:
+    build:
+      context: ./router
+      dockerfile: Dockerfile
+    container_name: laboratorio-router
+    cap_add:
+      - NET_ADMIN
+    command: /entrypoint.sh
+    networks:
+      laboratorio_vlan10:
+        ipv4_address: 10.100.10.2
+      laboratorio_vlan20:
+        ipv4_address: 10.100.20.2
+      laboratorio_vlan30:
+        ipv4_address: 10.100.30.2
+      laboratorio_vlan40:
+        ipv4_address: 10.100.40.2
 
 networks:
-  vlan10:
+  laboratorio_vlan10:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.1.0/26
-  vlan20:
+        - subnet: 10.100.10.0/26
+
+  laboratorio_vlan20:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.1.64/26
-  vlan30:
+        - subnet: 10.100.20.0/26
+
+  laboratorio_vlan30:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.1.128/26
-  vlan40:
+        - subnet: 10.100.30.0/26
+
+  laboratorio_vlan40:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.1.192/26
+        - subnet: 10.100.40.0/26
