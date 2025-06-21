@@ -1,0 +1,17 @@
+@startuml VLAN_Segmentation
+
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+
+component "Switch\nCisco 2960" as Switch {
+    [Fa0/1\nVLAN 10]
+    [Fa0/2\nVLAN 20]
+}
+
+node "PC-Admin\nIP: 192.168.10.10\nVLAN 10" as PC1
+node "PC-Ventas\nIP: 192.168.20.10\nVLAN 20" as PC2
+
+PC1 --> [Fa0/1\nVLAN 10] : Cable directo
+PC2 --> [Fa0/2\nVLAN 20] : Cable directo
+
+@enduml

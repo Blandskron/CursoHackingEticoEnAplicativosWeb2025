@@ -1,0 +1,70 @@
+version: '3.9'
+
+services:
+
+  router:
+    build: ./router
+    privileged: true
+    networks:
+      vlan10:
+        ipv4_address: 192.168.1.1
+      vlan20:
+        ipv4_address: 192.168.1.65
+      vlan30:
+        ipv4_address: 192.168.1.129
+      vlan40:
+        ipv4_address: 192.168.1.193
+
+  pc1:
+    build: ./client
+    container_name: pc1
+    privileged: true
+    networks:
+      vlan10:
+        ipv4_address: 192.168.1.10
+
+  pc2:
+    build: ./client
+    container_name: pc2
+    privileged: true
+    networks:
+      vlan20:
+        ipv4_address: 192.168.1.70
+
+  pc3:
+    build: ./client
+    container_name: pc3
+    privileged: true
+    networks:
+      vlan30:
+        ipv4_address: 192.168.1.140
+
+  pc4:
+    build: ./client
+    container_name: pc4
+    privileged: true
+    networks:
+      vlan40:
+        ipv4_address: 192.168.1.200
+
+networks:
+  vlan10:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/26
+  vlan20:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.64/26
+  vlan30:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.128/26
+  vlan40:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.192/26
