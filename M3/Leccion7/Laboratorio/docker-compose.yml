@@ -105,15 +105,29 @@ services:
 
   netdata:
     image: netdata/netdata:latest
+    container_name: netdata
+    hostname: ${HOSTNAME}
     ports:
-      - '19999:19999'
+      - 19999:19999
     cap_add:
       - SYS_PTRACE
     security_opt:
       - apparmor:unconfined
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+    volumes:
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    environment:
+      - NETDATA_CLAIM_TOKEN=ubeQs6JtYutnWZEHLvNkK5FSr1_b4BwNjUjk-fv3b4PVjv8asLUWDo3FmQTPfgyfkKy-TnGzd71bbjRi1xHsNKpKM9c9WGmbh0cqjHebonFjgPOSA2OMxy6UIyLq6kWEQQUVjdE
+      - NETDATA_CLAIM_URL=https://app.netdata.cloud
+      - NETDATA_CLAIM_ROOMS=d4f8a5da-8b1c-42ee-a08b-b4100ede7619
 
   prometheus:
     image: prom/prometheus:latest
@@ -185,11 +199,15 @@ services:
       - NET_RAW
     restart: unless-stopped
 
+volumes:
+  data01:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
+
 networks:
   internal_net:
   monitoring_net:
   gateway_net:
   elastic: 
 
-volumes:
-  data01:
