@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import sqlite3
-from .database import init_db
+from database import init_db
 from pathlib import Path
 
 # Inicializar base de datos
