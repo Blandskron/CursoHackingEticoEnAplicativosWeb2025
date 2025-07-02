@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inicio</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <h2>Hola {{ user.username }}</h2>
+        <p>Te autenticastes con el protocolo OAuth2 usando GitHub</p>
+        <a href="{% url 'account_logout' %}">Cerrar sesión</a>
+    {% else %}
+        <h2>No has iniciado sesión</h2>
+        <a href="{% url 'account_login' %}">Iniciar sesión con GitHub</a>
+    {% endif %}
+</body>
+</html>
