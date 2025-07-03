@@ -1,0 +1,6 @@
+Django
+django-allauth
+PyJWT
+cryptography
+requests
+requests-oauthlib
