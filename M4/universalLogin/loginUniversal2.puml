@@ -1,0 +1,46 @@
+@startuml
+start
+
+:Usuario accede a\nmipaginaweb.com;
+
+if (¿Está autenticado?) then (No)
+  :Frontend redirige a\nAuthService con client_id;
+
+  :AuthService busca configuración\nOAuth2 para ese dominio;
+
+  if (¿Proveedor = GitHub?) then (Sí)
+    :AuthService redirige a GitHub;
+    :Usuario ingresa credenciales;
+    :GitHub devuelve token\ny userinfo;
+  elseif (¿Proveedor = Google?) then (Sí)
+    :AuthService redirige a Google;
+    :Usuario ingresa credenciales;
+    :Google devuelve token\ny userinfo;
+  elseif (¿Proveedor = LinkedIn?) then (Sí)
+    :AuthService redirige a LinkedIn;
+    :Usuario ingresa credenciales;
+    :LinkedIn devuelve token\ny userinfo;
+  else
+    stop
+  endif
+
+  :AuthService registra sesión;
+  :AuthService busca roles/permiso;
+  :AuthService emite JWT;
+
+  :Frontend recibe JWT;
+endif
+
+:Usuario accede a un recurso\ncon JWT;
+
+:API recibe JWT y lo valida;
+:Verifica firma, expiración,\ncliente, y permisos;
+
+if (¿Tiene permisos?) then (Sí)
+  :API devuelve datos protegidos;
+else
+  :API devuelve error 403;
+endif
+
+stop
+@enduml

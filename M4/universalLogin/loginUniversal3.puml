@@ -1,0 +1,46 @@
+@startuml
+start
+
+:Usuario accede a\npagina1.com;
+:Frontend redirige a\nUniversalLoginService;
+
+:UniversalLoginService\nidentifica cliente = pagina1.com;
+
+if (Cliente == pagina1.com) then (Sí)
+  :Selecciona GitHub como IdP;
+  :Redirige al login GitHub;
+  :Usuario ingresa credenciales;
+  :GitHub devuelve token y userinfo;
+
+elseif (Cliente == pagina2.com) then (Sí)
+  :Selecciona Google como IdP;
+  :Redirige al login Google;
+  :Usuario ingresa credenciales;
+  :Google devuelve token y userinfo;
+
+elseif (Cliente == pagina3.com) then (Sí)
+  :Selecciona LinkedIn como IdP;
+  :Redirige al login LinkedIn;
+  :Usuario ingresa credenciales;
+  :LinkedIn devuelve token y userinfo;
+
+else
+  :Cliente desconocido;
+  stop
+endif
+
+:UniversalLoginService\ncrea o actualiza usuario;
+:Asigna roles y permisos;
+:Genera JWT firmado;
+:Devuelve JWT al frontend;
+
+:Usuario accede a API protegida;
+:API valida el JWT;
+if (Permisos válidos?) then (Sí)
+  :Devuelve datos;
+else
+  :Devuelve error 403;
+endif
+
+stop
+@enduml

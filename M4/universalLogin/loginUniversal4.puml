@@ -1,0 +1,29 @@
+@startuml
+actor Usuario
+participant "Frontend\n(portafolio.com)" as FE
+participant "Universal Auth\nService" as AuthService
+participant "LinkedIn\n(OAuth2 Provider)" as LinkedIn
+database "Auth DB\n(Sesiones, Roles, Permisos)" as DB
+participant "API Resource Server\n(portafolio.com backend)" as API
+
+== Flujo de Login ==
+
+Usuario -> FE : Accede a portafolio.com
+FE -> AuthService : Redirige a /auth/login?client=portafolio.com
+AuthService -> DB : Verifica configuración del cliente
+AuthService -> LinkedIn : Redirige a login OAuth2
+Usuario -> LinkedIn : Ingresa credenciales
+LinkedIn --> AuthService : Devuelve code (callback)
+AuthService -> LinkedIn : Intercambia code por token
+LinkedIn --> AuthService : userinfo (email, name, etc)
+
+== Emisión del Token JWT ==
+AuthService -> DB : Registra sesión, asigna roles y permisos
+AuthService --> FE : Devuelve JWT (firmado con RSA)
+
+== Acceso al Backend ==
+FE -> API : Authorization: Bearer <JWT>
+API -> AuthService : Verifica JWT (firma, expiración, client)
+API -> DB : Carga permisos desde claims del token
+API --> FE : Respuesta protegida
+@enduml

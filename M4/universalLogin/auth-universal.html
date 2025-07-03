@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Autenticación Universal</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 2rem;
+      color: #333;
+    }
+    h1, h2, h3 {
+      color: #1a202c;
+    }
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+    }
+    h3 {
+      font-size: 1.2rem;
+      margin-top: 1.5rem;
+    }
+    p {
+      line-height: 1.7;
+    }
+    ul {
+      margin-left: 1.2rem;
+    }
+    code {
+      background-color: #e2e8f0;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.95rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background-color: #fff;
+      box-shadow: 0 0 0 1px #ddd;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+    }
+    .uml-container {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .footer {
+      margin-top: 4rem;
+      font-size: 0.9rem;
+      color: #888;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Sistema de Autenticación Universal Multicliente con OAuth2 y Control de Acceso</h1>
+
+<h2>1. Objetivo General</h2>
+<p>
+Diseñar e implementar una <strong>arquitectura de autenticación universal</strong> capaz de gestionar el inicio de sesión de múltiples aplicaciones cliente (multi-dominio) utilizando distintos proveedores OAuth2 (GitHub, Google, LinkedIn, etc.), centralizando la lógica de autenticación, autorización, gestión de sesiones y emisión de tokens JWT seguros.
+</p>
+
+<h2>2. Motivación</h2>
+<p>En proyectos donde múltiples dominios necesitan autenticación federada, mantener lógica duplicada en cada uno genera riesgos y altos costos. Este sistema permite:</p>
+<ul>
+  <li>Centralizar la gestión de usuarios, roles y sesiones</li>
+  <li>Unificar la seguridad mediante JWT firmados</li>
+  <li>Delegar la autenticación a proveedores externos confiables</li>
+  <li>Facilitar el mantenimiento y escalabilidad</li>
+</ul>
+
+<h2>3. Arquitectura General</h2>
+
+<h3>Componentes</h3>
+<table>
+  <tr>
+    <th>Componente</th>
+    <th>Función</th>
+  </tr>
+  <tr>
+    <td><strong>UniversalLoginService</strong></td>
+    <td>Backend centralizado que maneja autenticación, OAuth2 y emisión de JWT</td>
+  </tr>
+  <tr>
+    <td><strong>Frontend Cliente</strong></td>
+    <td>Aplicación que delega el login al servicio central</td>
+  </tr>
+  <tr>
+    <td><strong>OAuth2 Provider</strong></td>
+    <td>Proveedor externo (GitHub, Google, LinkedIn, Azure B2C, etc.)</td>
+  </tr>
+  <tr>
+    <td><strong>DB Centralizada</strong></td>
+    <td>Usuarios, sesiones, permisos, relaciones cliente ↔ proveedor</td>
+  </tr>
+</table>
+
+<div class="uml-container">
+  <h3>Diagrama de Arquitectura</h3>
+  <img src="universalLogin.png" alt="Architecture Diagram" />
+</div>
+
+<h2>4. Flujo de Autenticación</h2>
+
+<h3>Paso a Paso:</h3>
+<ol>
+  <li>Usuario accede a una aplicación cliente (<code>paginaX.com</code>)</li>
+  <li>El frontend redirige al endpoint: <br><code>https://auth.empresa.com/login?client=paginaX.com</code></li>
+  <li>El <strong>UniversalLoginService</strong> identifica el cliente y su proveedor OAuth2</li>
+  <li>Se redirige al proveedor correspondiente (GitHub, Google, LinkedIn)</li>
+  <li>El proveedor autentica al usuario y retorna un <strong>authorization code</strong></li>
+  <li>El servicio intercambia el código por un <code>access_token</code></li>
+  <li>Se consulta el perfil del usuario (email, nombre, etc.)</li>
+  <li>Se registra la sesión en la base de datos</li>
+  <li>Se emite un JWT firmado (RSA) con los claims:</li>
+  <ul>
+    <li><code>sub</code>: ID del usuario</li>
+    <li><code>aud</code>: dominio (<code>paginaX.com</code>)</li>
+    <li><code>roles</code>: roles asociados al cliente</li>
+    <li><code>permissions</code>: permisos derivados</li>
+  </ul>
+  <li>El frontend recibe el token y lo utiliza en sus llamadas protegidas</li>
+</ol>
+
+<h2>5. Modelo de Datos</h2>
+
+<h3>Tabla <code>clients</code></h3>
+<table>
+  <tr>
+    <th>id</th><th>domain</th><th>provider</th><th>client_id</th><th>client_secret</th><th>redirect_uri</th>
+  </tr>
+  <tr><td>1</td><td>pagina1.com</td><td>github</td><td>abc123</td><td>****</td><td>/callback/github</td></tr>
+  <tr><td>2</td><td>pagina2.com</td><td>google</td><td>def456</td><td>****</td><td>/callback/google</td></tr>
+  <tr><td>3</td><td>pagina3.com</td><td>linkedin</td><td>xyz789</td><td>****</td><td>/callback/linkedin</td></tr>
+</table>
+
+<h3>Tabla <code>users</code></h3>
+<p>Contiene los usuarios autenticados, asociados a sus clientes.</p>
+
+<h3>Tabla <code>sessions</code></h3>
+<p>Para tracking de sesiones activas y revocación manual.</p>
+
+<h3>Tabla <code>roles_permissions</code></h3>
+<p>Para autorización basada en dominio (multi-tenant).</p>
+
+<h2>6. Seguridad</h2>
+
+<table>
+  <tr><th>Mecanismo</th><th>Descripción</th></tr>
+  <tr><td>JWT firmado</td><td>Algoritmo RSA256. Public key expuesta en <code>/public-key</code></td></tr>
+  <tr><td>Expiración tokens</td><td>Configurable por dominio (ej: 15 min + refresh opcional)</td></tr>
+  <tr><td>Revocación</td><td>Implementación de listas negras o UUID por sesión</td></tr>
+  <tr><td>CORS estricto</td><td>Solo orígenes permitidos por dominio</td></tr>
+  <tr><td>CSRF protection</td><td>Solo en formularios si se usa flujo híbrido</td></tr>
+  <tr><td>Logs de auditoría</td><td>Por login, sesión, error de token o acceso no autorizado</td></tr>
+</table>
+
+<h2>7. Ventajas</h2>
+<ul>
+  <li>Centralización de seguridad y control de acceso</li>
+  <li>Escalabilidad para nuevos dominios con solo registrar configuración</li>
+  <li>Cumplimiento con estándares como OAuth2, OIDC y JWT</li>
+  <li>Facilidad de integración con Azure AD B2C, Auth0 u otros IdPs</li>
+  <li>Backend desacoplado del frontend</li>
+</ul>
+
+<h2>8. Stack Tecnológico Recomendado</h2>
+<table>
+  <tr><th>Componente</th><th>Tecnología sugerida</th></tr>
+  <tr><td>Backend Auth</td><td>FastAPI o Django Rest Framework</td></tr>
+  <tr><td>Base de datos</td><td>PostgreSQL</td></tr>
+  <tr><td>JWT Management</td><td><code>pyjwt</code>, <code>Authlib</code>, <code>cryptography</code></td></tr>
+  <tr><td>OAuth2 Client</td><td><code>Authlib</code> / <code>social-auth-app-django</code></td></tr>
+  <tr><td>Frontend</td><td>Cualquier stack (React, Vue, etc.)</td></tr>
+  <tr><td>Infraestructura</td><td>Docker, Nginx, HTTPS, API Gateway</td></tr>
+</table>
+
+<h2>9. Extensiones Futuras</h2>
+<ul>
+  <li><strong>Single Logout Cross-Client</strong></li>
+  <li><strong>Gestión visual de usuarios/roles</strong></li>
+  <li><strong>Notificaciones o auditoría en tiempo real</strong></li>
+  <li><strong>ML para detección de sesiones anómalas</strong></li>
+  <li><strong>Integración con Azure AD B2C / Okta / Keycloak</strong></li>
+</ul>
+
+<h2>10. Conclusión</h2>
+<p>
+Este diseño propone una solución profesional, escalable y segura para gestionar múltiples clientes y proveedores de identidad en un solo punto de control.  
+Es perfectamente viable en entornos corporativos, con proyección a SaaS, B2B y B2C.
+</p>
+
+<div class="footer">© 2025 | Documento técnico generado para evaluación de arquitectura | Autor: Bastián Landskron</div>
+</body>
+</html>

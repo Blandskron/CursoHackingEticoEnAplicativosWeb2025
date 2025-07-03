@@ -1,0 +1,34 @@
+@startuml
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+skinparam componentStyle rectangle
+skinparam ArrowColor Black
+
+title Arquitectura Universal Login con OAuth2
+
+rectangle "pagina1.com\n(frontend)" as P1
+rectangle "pagina2.com\n(frontend)" as P2
+rectangle "pagina3.com\n(frontend)" as P3
+
+cloud "GitHub\nOAuth2" as GitHub
+cloud "Google\nOAuth2" as Google
+cloud "LinkedIn\nOAuth2" as LinkedIn
+
+rectangle "**Universal Login Service**\nGestión centralizada de login,\nroles, permisos y JWT" as LoginService
+
+database "DB\n(usuarios, roles,\nclientes, sesiones)" as DB
+
+' --- Conexiones desde clientes al login service
+P1 -[#red,thickness=3]> LoginService : login (GitHub)
+P2 -[#green,thickness=3]> LoginService : login (Google)
+P3 -[#gold,thickness=3]> LoginService : login (LinkedIn)
+
+' --- Conexiones desde login service a los IdPs
+LoginService -[#red,thickness=3]> GitHub : OAuth2
+LoginService -[#green,thickness=3]> Google : OAuth2
+LoginService -[#gold,thickness=3]> LinkedIn : OAuth2
+
+' --- DB interna
+LoginService --> DB : lectura/escritura
+
+@enduml
