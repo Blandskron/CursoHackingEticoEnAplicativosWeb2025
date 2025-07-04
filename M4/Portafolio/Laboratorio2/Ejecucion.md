@@ -84,3 +84,5 @@ curl -X GET http://localhost:8000/panel \
 | Acceso sin login    | ❌ Rechazado automáticamente                                                 |
 | Escalada por `role` | ✅ Permitido solo si lo define el admin en frontend o backend con validación |
 | Token manipulado    | ❌ Detectado por `JWTError`                                                  |
+
+uvicorn main:app --reload

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe de Auditoría Técnica - SafeStart</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 2rem;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            margin-top: 2rem;
+        }
+        code {
+            background-color: #eef;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        .imagen {
+            margin: 1rem 0;
+        }
+        .imagen img {
+            border: 1px solid #ccc;
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .imagen figcaption {
+            text-align: center;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        table, th, td {
+            border: 1px solid #aaa;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        blockquote {
+            border-left: 5px solid #aaa;
+            margin: 1rem 0;
+            padding-left: 1rem;
+            color: #555;
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🛡️ Informe de Auditoría Técnica</h1>
+<p><strong>Aplicación auditada:</strong> SafeStart<br>
+<strong>Tecnología base:</strong> FastAPI + SQLite<br>
+<strong>Fecha de auditoría:</strong> 03 de julio de 2025<br>
+<strong>Objetivo:</strong> Evaluar la seguridad de los endpoints de autenticación y autorización, así como el control de acceso al panel administrativo.</p>
+
+<h2>🔍 1. Resumen Ejecutivo</h2>
+<p>Durante la auditoría se identificaron fallos críticos en la validación de entrada y en el control de acceso de la aplicación. Los hallazgos permiten:</p>
+<ul>
+    <li>Ejecutar scripts maliciosos (XSS).</li>
+    <li>Acceder sin credenciales válidas (inyección SQL).</li>
+    <li>Obtener privilegios administrativos sin validación de roles.</li>
+    <li>Acceder al panel sin restricciones por usuario o rol.</li>
+</ul>
+<p>Estos hallazgos representan <strong>riesgos de seguridad de nivel crítico</strong>, según el estándar <a href="https://owasp.org/www-project-top-ten/" target="_blank">OWASP Top 10</a>.</p>
+
+<h2>🔎 2. Detalles Técnicos de las Vulnerabilidades</h2>
+
+<h3>📌 2.1 XSS Persistente en Registro</h3>
+<p><strong>Descripción:</strong> Es posible registrar un usuario con un <code>username</code> que contiene código HTML/JS malicioso, el cual es reflejado directamente en las respuestas del servidor.</p>
+
+<div class="imagen">
+    <img src="Screenshot 2025-07-03 200018.png" alt="Registro con XSS">
+    <figcaption>Imagen 1 – Registro con XSS</figcaption>
+</div>
+
+<div class="imagen">
+    <img src="Screenshot 2025-07-03 200238.png" alt="Respuesta reflejando XSS">
+    <figcaption>Imagen 2 – Respuesta reflejando el XSS</figcaption>
+</div>
+
+<p><strong>Recomendación:</strong></p>
+<ul>
+    <li>Sanitizar y/o escapar todo contenido proveniente del usuario.</li>
+    <li>Usar librerías como <code>bleach</code> en Python.</li>
+</ul>
+
+<h3>📌 2.2 Inyección SQL en Login</h3>
+<p><strong>Descripción:</strong> El campo <code>password</code> permite bypass de autenticación con inyecciones SQL.</p>
+
+<div class="imagen">
+    <img src="Screenshot 2025-07-03 200342.png" alt="Login SQLi desde Postman">
+    <figcaption>Imagen 3 – Payload de inyección SQL desde Postman</figcaption>
+</div>
+
+<p><strong>Recomendación:</strong></p>
+<ul>
+    <li>Usar consultas parametrizadas (prepared statements).</li>
+    <li>Sanitizar entrada del usuario.</li>
+    <li>Evitar string concatenation en consultas SQL.</li>
+</ul>
+
+<h3>📌 2.3 Escalada de Privilegios</h3>
+<p><strong>Descripción:</strong> El sistema no valida correctamente el rol del usuario al acceder al panel, permitiendo acceso a todos.</p>
+
+<div class="imagen">
+    <img src="Screenshot 2025-07-03 195235.png" alt="Acceso al panel sin control de rol">
+    <figcaption>Imagen 4 – Acceso al panel sin control de rol</figcaption>
+</div>
+
+<p><strong>Recomendación:</strong></p>
+<ul>
+    <li>Verificar roles explícitamente en endpoints protegidos.</li>
+    <li>Implementar middleware de autorización por roles.</li>
+</ul>
+
+<h2>🧪 3. Prueba de Base de Datos</h2>
+<p>Se evidenció que los datos inyectados se almacenan sin validación en la base de datos SQLite.</p>
+
+<p><em>(Se recomienda incluir aquí una imagen adicional del contenido de la base de datos `safestart.db` mostrando el usuario con código XSS registrado.)</em></p>
+
+<h2>✅ 4. Recomendaciones Globales</h2>
+<ul>
+    <li><strong>Validación de entradas:</strong> Usar Pydantic + validadores personalizados.</li>
+    <li><strong>Sanitización:</strong> Filtrar caracteres peligrosos antes de mostrar o almacenar.</li>
+    <li><strong>Hash seguro de contraseñas:</strong> Usar <code>bcrypt</code> o <code>argon2</code>.</li>
+    <li><strong>JWT seguro:</strong> Firmado, con expiración y verificación en cada endpoint.</li>
+    <li><strong>Roles y permisos:</strong> Controlar acceso a endpoints por tipo de usuario.</li>
+    <li><strong>Pruebas automatizadas:</strong> Integrar herramientas como Bandit o ZAP.</li>
+</ul>
+
+<h2>📌 5. Conclusión</h2>
+<p>El sistema presenta vulnerabilidades críticas que deben ser atendidas con urgencia. Se recomienda iniciar una fase de remediación aplicando las recomendaciones descritas, y una posterior reauditoría antes de su publicación en un entorno productivo.</p>
+
+<blockquote>
+    Este informe forma parte de una evaluación técnica de seguridad. No debe compartirse públicamente sin autorización de la entidad auditada.
+</blockquote>
+
+</body>
+</html>
