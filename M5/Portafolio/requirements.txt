@@ -1,0 +1,6 @@
+requests
+beautifulsoup4
+python-nmap
+python-docx
+pdfkit
+difflib
