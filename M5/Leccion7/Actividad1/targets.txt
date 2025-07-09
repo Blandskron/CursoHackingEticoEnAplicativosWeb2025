@@ -1,1 +1,4 @@
 https://demo.owasp-juice.shop/rest/products/search?q=test
+http://victima.com/producto?id=1
+https://insegura.net/buscar.php?q=libro
+http://localhost:8080/item?ref=100
