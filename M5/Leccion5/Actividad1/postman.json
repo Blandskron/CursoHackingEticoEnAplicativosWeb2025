@@ -1,0 +1,61 @@
+{
+  "info": {
+    "name": "Registro de Usuario - BlandsKron",
+    "_postman_id": "b92d1ae1-4713-4a7b-a255-58e2b0c38c01",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Crear usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "csrfmiddlewaretoken",
+              "value": "ZYqJzu1EyHL0OqbMmD9nYHSMdbuXCOwEXtaZAb7BOi6SEJf3EbxXI0Drrn42Idnr",
+              "type": "text"
+            },
+            {
+              "key": "username",
+              "value": "usuario_demo",
+              "type": "text"
+            },
+            {
+              "key": "password1",
+              "value": "ClaveSegura123",
+              "type": "text"
+            },
+            {
+              "key": "password2",
+              "value": "ClaveSegura123",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://blandskron.com/accounts/register/",
+          "protocol": "https",
+          "host": [
+            "blandskron",
+            "com"
+          ],
+          "path": [
+            "accounts",
+            "register",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

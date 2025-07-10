@@ -6,6 +6,7 @@ def analizar_encabezados():
 
     try:
         respuesta = requests.get(url, timeout=5)
+        print("respuesta " + respuesta.text)
     except requests.exceptions.RequestException as e:
         print(f"[ERROR] No se pudo conectar a {url}: {e}")
         return
