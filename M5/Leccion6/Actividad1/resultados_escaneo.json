@@ -1,37 +1,21 @@
 [
   {
-    "host": "192.168.1.6",
-    "estado": "up",
-    "puertos": []
-  },
-  {
-    "host": "192.168.1.9",
+    "host": "192.168.1.1",
     "estado": "up",
     "puertos": [
       {
         "puerto": 80,
         "estado": "open",
         "servicio": "http",
-        "version": "0.94.14rc21"
+        "version": ""
       },
       {
-        "puerto": 443,
+        "puerto": 49152,
         "estado": "open",
-        "servicio": "http",
-        "version": "0.94.14rc21"
-      },
-      {
-        "puerto": 5060,
-        "estado": "filtered",
-        "servicio": "sip",
+        "servicio": "",
         "version": ""
       }
     ]
-  },
-  {
-    "host": "192.168.1.7",
-    "estado": "up",
-    "puertos": []
   },
   {
     "host": "192.168.1.12",
@@ -56,12 +40,6 @@
         "version": ""
       },
       {
-        "puerto": 2179,
-        "estado": "open",
-        "servicio": "vmrdp",
-        "version": ""
-      },
-      {
         "puerto": 3306,
         "estado": "open",
         "servicio": "mysql",
@@ -76,61 +54,7 @@
     ]
   },
   {
-    "host": "192.168.1.2",
-    "estado": "up",
-    "puertos": [
-      {
-        "puerto": 1034,
-        "estado": "open",
-        "servicio": "upnp",
-        "version": "1.0.4.9"
-      },
-      {
-        "puerto": 1044,
-        "estado": "open",
-        "servicio": "upnp",
-        "version": ""
-      },
-      {
-        "puerto": 1085,
-        "estado": "open",
-        "servicio": "upnp",
-        "version": ""
-      },
-      {
-        "puerto": 2003,
-        "estado": "open",
-        "servicio": "upnp",
-        "version": ""
-      },
-      {
-        "puerto": 3000,
-        "estado": "open",
-        "servicio": "tcpwrapped",
-        "version": ""
-      },
-      {
-        "puerto": 3001,
-        "estado": "open",
-        "servicio": "http",
-        "version": ""
-      },
-      {
-        "puerto": 7000,
-        "estado": "open",
-        "servicio": "rtsp",
-        "version": "377.40.00"
-      },
-      {
-        "puerto": 9080,
-        "estado": "open",
-        "servicio": "glrpc",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "host": "192.168.1.1",
+    "host": "192.168.1.9",
     "estado": "up",
     "puertos": [
       {
@@ -140,9 +64,15 @@
         "version": ""
       },
       {
-        "puerto": 49152,
+        "puerto": 443,
         "estado": "open",
-        "servicio": "upnp",
+        "servicio": "https",
+        "version": ""
+      },
+      {
+        "puerto": 5060,
+        "estado": "filtered",
+        "servicio": "sip",
         "version": ""
       }
     ]

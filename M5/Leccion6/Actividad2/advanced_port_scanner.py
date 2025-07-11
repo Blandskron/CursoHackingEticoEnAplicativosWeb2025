@@ -62,5 +62,7 @@ def main():
 
     escaneo_puertos(args.target, args.start_port, args.end_port)
 
+#python advanced_port_scanner.py -t 192.168.1.1 --start-port 20 --end-port 100
+
 if __name__ == "__main__":
     main()
