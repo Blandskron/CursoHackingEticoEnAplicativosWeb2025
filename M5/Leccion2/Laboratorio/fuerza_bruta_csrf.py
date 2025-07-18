@@ -8,7 +8,7 @@ URL_LOGIN = input("URL de login (ej: http://192.168.1.10:8000/login): ")
 with open("common_usernames.txt", "r", encoding="utf-8") as f:
     USUARIOS = [line.strip() for line in f if line.strip()]
 
-with open("rockyou.txt", "r", encoding="latin-1") as f:
+with open("common_passwords.txt", "r", encoding="latin-1") as f:
     CLAVES = [line.strip() for line in f if line.strip()]
 
 # === SESIÓN PERSISTENTE ===
