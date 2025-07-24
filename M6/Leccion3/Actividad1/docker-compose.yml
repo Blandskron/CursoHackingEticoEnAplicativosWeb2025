@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=p@ssw0rd
+      - MYSQL_ROOT_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+      - PHP_DISPLAY_ERRORS=1
+    networks:
+      - hacklab-net
+
+  dvwa-mysql:
+    image: mysql:5.7
+    container_name: dvwa-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+    volumes:
+      - dvwa-mysql-data:/var/lib/mysql
+    networks:
+      - hacklab-net
+
+  juiceshop:
+    image: bkimminich/juice-shop
+    container_name: juiceshop
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  mutillidae:
+    image: citizenstig/nowasp
+    container_name: mutillidae
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  bwapp:
+    image: raesene/bwapp
+    container_name: bwapp
+    ports:
+      - "8082:80"
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  webgoat:
+    image: webgoat/webgoat
+    container_name: webgoat
+    ports:
+      - "8083:8080"
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  webwolf:
+    image: webgoat/webwolf
+    container_name: webwolf
+    ports:
+      - "8084:9090"
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+networks:
+  hacklab-net:
+    driver: bridge
+
+volumes:
+  dvwa-mysql-data:

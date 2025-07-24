@@ -1,0 +1,18 @@
+version: '3.8' 
+ 
+services: 
+  openvas: 
+    image: immauss/openvas 
+    container_name: openvas 
+    restart: unless-stopped 
+    ports: 
+      - "9392:9392"  # Puerto para Web UI 
+    environment: 
+      - PASSWORD=admin  # Contraseña del usuario admin 
+    volumes: 
+      - openvas_data:/data 
+ 
+    shm_size: '2gb'  # Requisito mínimo para funcionamiento del escáner 
+ 
+volumes: 
+  openvas_data:
