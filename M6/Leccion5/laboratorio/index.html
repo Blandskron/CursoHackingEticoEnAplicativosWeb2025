@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Vulnerable</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 90%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .hidden {
+            display: none;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #fefcbf;
+            border: 1px solid #fbd38d;
+            color: #9c5c00;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+        }
+        .message-box.show {
+            display: block;
+            animation: fadeInOut 3s forwards;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        /* Estilos para el dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .dashboard-card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .product-list {
+            list-style: none;
+            padding: 0;
+        }
+        .product-item {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .product-item strong {
+            color: #1f2937;
+        }
+        .product-item span {
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div id="messageBox" class="message-box"></div>
+
+    <!-- Página de Login -->
+    <div id="loginPage" class="container">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Bienvenido a ERP</h2>
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
+                <input type="text" id="username" name="username" class="form-input" placeholder="admin" required>
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="admin1234" required>
+            </div>
+            <button type="submit" class="btn-primary">Iniciar Sesión</button>
+        </form>
+    </div>
+
+    <!-- Página del Dashboard -->
+    <div id="dashboardPage" class="container hidden">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800">Dashboard</h2>
+            <button id="logoutButton" class="btn-primary w-auto">Cerrar Sesión</button>
+        </div>
+
+        <div class="dashboard-grid mb-8">
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Ventas Mensuales</h3>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Productos en Stock</h3>
+                <div class="chart-container">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card mb-8">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Listado de Productos</h3>
+            <ul id="productList" class="product-list">
+                <!-- Los productos se cargarán aquí -->
+            </ul>
+        </div>
+
+        <div class="dashboard-card">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Agregar Nuevo Producto (Vulnerable a XSS y CSRF)</h3>
+            <form id="addProductForm" class="space-y-4">
+                <div>
+                    <label for="productName" class="block text-sm font-medium text-gray-700 mb-2">Nombre del Producto</label>
+                    <input type="text" id="productName" name="productName" class="form-input" placeholder="Ej: Laptop" required>
+                </div>
+                <div>
+                    <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                    <input type="number" id="productPrice" name="productPrice" class="form-input" placeholder="Ej: 1200" step="0.01" required>
+                </div>
+                <div>
+                    <label for="productStock" class="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                    <input type="number" id="productStock" name="productStock" class="form-input" placeholder="Ej: 50" required>
+                </div>
+                <button type="submit" class="btn-primary">Agregar Producto</button>
+            </form>
+        </div>
+
+        <div class="dashboard-card mt-8">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Buscar Productos (Vulnerable a Inyección SQL)</h3>
+            <form id="searchProductForm" class="space-y-4">
+                <div>
+                    <label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-2">Término de Búsqueda</label>
+                    <input type="text" id="searchQuery" name="searchQuery" class="form-input" placeholder="Ej: ' OR 1=1 --">
+                </div>
+                <button type="submit" class="btn-primary">Buscar</button>
+            </form>
+            <div id="searchResults" class="mt-4">
+                <!-- Los resultados de la búsqueda se mostrarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Función para mostrar mensajes temporales
+        function showMessage(message, type = 'warning') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = `message-box show bg-${type}-100 border-${type}-400 text-${type}-700`;
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+
+        // Simulación de base de datos de usuarios (vulnerable)
+        const users = [
+            { username: 'admin', password: 'admin1234' },
+            { username: 'user', password: 'user1234' }
+        ];
+
+        // Simulación de base de datos de productos (vulnerable)
+        let products = [
+            { id: 1, name: 'Laptop Pro', price: 1200, stock: 50 },
+            { id: 2, name: 'Smartphone X', price: 800, stock: 120 },
+            { id: 3, name: 'Monitor UltraWide', price: 450, stock: 75 },
+            { id: 4, name: 'Teclado Mecánico', price: 150, stock: 200 }
+        ];
+
+        // Simulación de datos para gráficos
+        const chartData = {
+            sales: {
+                labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+                data: [65, 59, 80, 81, 56, 55]
+            },
+            stock: {
+                labels: ['Laptop', 'Smartphone', 'Monitor', 'Teclado'],
+                data: [50, 120, 75, 200]
+            }
+        };
+
+        // Elementos del DOM
+        const loginPage = document.getElementById('loginPage');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const loginForm = document.getElementById('loginForm');
+        const logoutButton = document.getElementById('logoutButton');
+        const addProductForm = document.getElementById('addProductForm');
+        const searchProductForm = document.getElementById('searchProductForm');
+        const productList = document.getElementById('productList');
+        const searchResults = document.getElementById('searchResults');
+
+        let salesChartInstance;
+        let stockChartInstance;
+
+        // Función para renderizar la lista de productos
+        function renderProducts(productsToRender = products) {
+            productList.innerHTML = '';
+            if (productsToRender.length === 0) {
+                productList.innerHTML = '<li class="text-gray-500">No hay productos para mostrar.</li>';
+                return;
+            }
+            productsToRender.forEach(product => {
+                // Vulnerabilidad XSS: El nombre del producto no está sanitizado
+                const listItem = document.createElement('li');
+                listItem.className = 'product-item';
+                listItem.innerHTML = `
+                    <strong>${product.name}</strong>
+                    <span>Precio: $${product.price.toFixed(2)} | Stock: ${product.stock}</span>
+                `;
+                productList.appendChild(listItem);
+            });
+        }
+
+        // Función para actualizar los gráficos
+        function updateCharts() {
+            if (salesChartInstance) salesChartInstance.destroy();
+            if (stockChartInstance) stockChartInstance.destroy();
+
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            salesChartInstance = new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.sales.labels,
+                    datasets: [{
+                        label: 'Ventas',
+                        data: chartData.sales.data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            const stockCtx = document.getElementById('stockChart').getContext('2d');
+            stockChartInstance = new Chart(stockCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.stock.labels,
+                    datasets: [{
+                        label: 'Stock',
+                        data: chartData.stock.data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+        }
+
+        // Manejo del Login (Vulnerable a Inyección SQL por lógica, no por DB real)
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Vulnerabilidad: Lógica de autenticación vulnerable a "inyección SQL" (simulada)
+            // Si el usuario ingresa ' OR 1=1 --', la condición siempre será verdadera.
+            const foundUser = users.find(user => user.username === username && user.password === password);
+
+            if (foundUser) {
+                // Simulación de sesión
+                localStorage.setItem('loggedIn', 'true');
+                localStorage.setItem('username', username);
+                loginPage.classList.add('hidden');
+                dashboardPage.classList.remove('hidden');
+                renderProducts();
+                updateCharts();
+                showMessage('Inicio de sesión exitoso.', 'success');
+            } else {
+                showMessage('Credenciales inválidas.', 'error');
+            }
+        });
+
+        // Manejo del Logout
+        logoutButton.addEventListener('click', function() {
+            localStorage.removeItem('loggedIn');
+            localStorage.removeItem('username');
+            dashboardPage.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            showMessage('Sesión cerrada.', 'info');
+        });
+
+        // Manejo de Agregar Producto (Vulnerable a XSS y CSRF)
+        addProductForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Vulnerabilidad CSRF: No se verifica ningún token CSRF.
+            // Un atacante podría forzar al usuario a enviar este formulario.
+
+            const productName = document.getElementById('productName').value;
+            const productPrice = parseFloat(document.getElementById('productPrice').value);
+            const productStock = parseInt(document.getElementById('productStock').value);
+
+            // Vulnerabilidad XSS: El nombre del producto no se sanitiza antes de almacenarse
+            // y luego se renderiza directamente en el DOM.
+            const newProduct = {
+                id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
+                name: productName, // Aquí se inyectaría el XSS
+                price: productPrice,
+                stock: productStock
+            };
+
+            products.push(newProduct);
+            renderProducts();
+            // Actualizar datos de stock para el gráfico (simulado)
+            chartData.stock.labels.push(newProduct.name);
+            chartData.stock.data.push(newProduct.stock);
+            updateCharts();
+            addProductForm.reset();
+            showMessage('Producto agregado exitosamente.', 'success');
+        });
+
+        // Manejo de Búsqueda de Productos (Vulnerable a Inyección SQL simulada)
+        searchProductForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchQuery = document.getElementById('searchQuery').value;
+            searchResults.innerHTML = '';
+
+            // Vulnerabilidad de Inyección SQL (simulada):
+            // La lógica de búsqueda es vulnerable a patrones de inyección.
+            // Ej: ' OR 1=1 --
+            // Ej: ' UNION SELECT 1, 'Inyectado', 100, 10 --
+            // En un entorno real, esto se ejecutaría en una base de datos.
+            // Aquí, simulamos el comportamiento de una consulta SQL vulnerable.
+
+            let filteredProducts = [];
+            try {
+                // Simulación de inyección SQL
+                if (searchQuery.includes("' OR 1=1 --")) {
+                    filteredProducts = [...products]; // Retorna todos los productos
+                    showMessage('Inyección SQL detectada: Se muestran todos los productos.', 'error');
+                } else if (searchQuery.includes("' UNION SELECT ")) {
+                    // Simulación de UNION SELECT
+                    const parts = searchQuery.split("' UNION SELECT ");
+                    const injectedData = parts[1].split(' --')[0].split(',').map(s => s.trim().replace(/'/g, ''));
+                    if (injectedData.length >= 4) { // Asumiendo id, name, price, stock
+                        filteredProducts = [...products, {
+                            id: parseInt(injectedData[0]),
+                            name: injectedData[1],
+                            price: parseFloat(injectedData[2]),
+                            stock: parseInt(injectedData[3])
+                        }];
+                        showMessage('Inyección SQL detectada: Datos inyectados.', 'error');
+                    } else {
+                        filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                    }
+                }
+                else {
+                    filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                }
+            } catch (error) {
+                console.error("Error en la simulación de inyección SQL:", error);
+                filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+            }
+
+
+            if (filteredProducts.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'product-list';
+                filteredProducts.forEach(product => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'product-item';
+                    // Vulnerabilidad XSS: El nombre del producto puede contener XSS si fue inyectado
+                    listItem.innerHTML = `
+                        <strong>${product.name}</strong>
+                        <span>Precio: $${product.price.toFixed(2)} | Stock: ${product.stock}</span>
+                    `;
+                    ul.appendChild(listItem);
+                });
+                searchResults.appendChild(ul);
+            } else {
+                searchResults.innerHTML = '<p class="text-gray-500">No se encontraron productos.</p>';
+            }
+        });
+
+        // Verificar estado de la sesión al cargar la página
+        window.onload = function() {
+            if (localStorage.getItem('loggedIn') === 'true') {
+                loginPage.classList.add('hidden');
+                dashboardPage.classList.remove('hidden');
+                renderProducts();
+                updateCharts();
+            } else {
+                loginPage.classList.remove('hidden');
+                dashboardPage.classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

