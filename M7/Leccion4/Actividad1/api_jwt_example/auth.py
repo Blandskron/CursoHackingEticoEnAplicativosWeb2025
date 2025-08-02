@@ -5,8 +5,14 @@ from models import fake_users_db
 from schemas import User
 from datetime import datetime, timedelta
 
-SECRET_KEY = "secret"
-ALGORITHM = "HS256"
+# Carga de claves RSA
+with open("private.pem", "rb") as f:
+    PRIVATE_KEY = f.read()
+
+with open("public.pem", "rb") as f:
+    PUBLIC_KEY = f.read()
+
+ALGORITHM = "RS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
@@ -14,12 +20,12 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=1
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, PRIVATE_KEY, algorithm=ALGORITHM)
 
 
 def decode_token(token: str):
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return jwt.decode(token, PUBLIC_KEY, algorithms=[ALGORITHM])
     except JWTError:
         raise HTTPException(status_code=403, detail="Invalid token")
 

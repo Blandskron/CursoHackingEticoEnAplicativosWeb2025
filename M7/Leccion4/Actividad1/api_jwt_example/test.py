@@ -1,0 +1,42 @@
+from jose import jwt
+from datetime import datetime, timedelta
+
+private_key = """-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCR9lOM6sAHanit
+aFp/52u6dkDohfDhARIjJ6KDZ16gkg2j+wRBat/KVzOCTaGt3b69p+R+EMeHwtiK
+TcFjRn4PFMKm2AEUEIwJ07tK0AQiVVbE1/4w9WT20WC/PxWtL17b1LUa30IHeJKu
+yHgJ+Kih0QMqgDZDHJ8UxKxBiqbMMGWCFULegCO8YMVtfqjlIXEoE9H3WlWSuWmo
+cHH2E4norBlxJm5qCTvbZVvDu9fHo5WXp1jU4tikToNS9G/oFazoe2be9dEsjTeJ
+cAlbZo07pXq7ITwoJ/gb3A6Fss7zTBFZBTOrGCG8cB544+Bk8Z0SixVsFEc5ZEVq
+rX98b/DHAgMBAAECggEAQBQ/tuBCYJ8WDq7++CL9cPVEZrCSwP0q3MMkPgMOEHk+
+QszLH/sO93JT+zMgtUdh2zpPfibYqhnY3dLoATDr26wWDpBK3Oesyw2orl3nSrlj
+Z/SZNB4vbooaKqvD1O20e9cEkSENiGEfKFt7E4mWYr/zX1+9MrZogoIbS4TW2FIG
++25o2BoCp01oK3Un+24RG/KOce7F+p8xu6DZeJmUOwQftC6TVilaZYiedvb9rONf
+wrq212vtskrks5ZtjRPbVbG1zgyQUP33VMZXgVdFiy8F37/g6ABMVTAi38W46sDI
+oMX6DdjcvB2aerLU1uHwnVfDrYyEmNt/6mRdXOa7vQKBgQDKqpCb+yiQ9e8q5dST
+5hTJfF5pJoKn/Fvqarjz3dp2GDNYb9Xt2J/oV51G+Hs4g9fJBtJPOIHq3+snlE4Z
+SSmosTHK2lZRMckwKelVCPGuzXk14RWb861rUnMUCVA3/eepl2iOPeXbEnMxcilw
+crsTuuFZI46ly59DuAAwmOVJ1QKBgQC4X6mp8uIZaYv+k6oa0/Ucf1EKOpykhYQR
+4Gx4hCbLTT7PaGRKX98wYz88Fd5vUPSRJoXTP8qQyw07sylkKbxVokTAVg0skU/s
+o0xi63+z7S2Sa16D7Lwa7XNRKLyufR2oBhnY4QghoctufnLME042marNkrtBdHWy
+9XJ9/IViKwKBgBoOd+02C28nz4oqZnxldoK5NMI8K0xBy+eFtSXVfkL0tZVHO7AK
+y/RpX1VCmUUY3mOANwXsc/eotmkuTiQ+HdcMgSRdkf96cS16Ff/S2I/q5wygVdDp
+MYC85wLKd7/bKy/Iwa6YErdp1dmjneRRO/A7dMGrKqnyVhW00IFvBvvJAoGBAIoC
+EV3FELk06DWHEq1COxc5tc+ST+5WgqVe99K+GMvU5k8aNPf3C3mM0KiJNhbc4jRE
+Qaf++AGp/B3T3ge7td3juNK/ltzlaI4ZLfRdkxl7T8Fp3TWi3qrJUqhNde6meKxs
+5KwSxaNnGH985zEawlDcdZ2rV7+HDRMH5sunWbBBAoGAL4KomOAYIKZWCNLNZK4D
+983ZVT0i4ziQjnifcQuyyMhbhTTf42WtdRf66O6K9yactVY7HS3K8yiAgcJeefXG
+L2fsj99wNuEggT6zhw7M1UulterJ+5fIx8Hy7kkcZlv+z69ZAyaBqUWuAdgYIjv2
+muLr4ZBtbjBDyd0kKxYhZeQ=
+-----END PRIVATE KEY-----
+"""
+
+# Configuración del token
+payload = {
+    "sub": "johndoe",
+    "role": "admin",
+    "exp": datetime.utcnow() + timedelta(hours=1)
+}
+
+token = jwt.encode(payload, private_key, algorithm="RS256")
+print("Bearer", token)
