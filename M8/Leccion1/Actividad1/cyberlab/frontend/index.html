@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cyberlab Inseguro</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Bienvenido al laboratorio inseguro</h1>
+  <form id="loginForm">
+    <input type="text" id="username" placeholder="Usuario" required />
+    <input type="password" id="password" placeholder="Contraseña" required />
+    <button type="submit">Login</button>
+  </form>
+
+  <h2>Comentarios</h2>
+  <textarea id="commentInput" placeholder="Escribe un comentario"></textarea>
+  <button onclick="submitComment()">Enviar</button>
+  <div id="comments"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

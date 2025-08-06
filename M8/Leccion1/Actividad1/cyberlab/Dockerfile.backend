@@ -1,0 +1,11 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY backend/ ./backend/
+COPY logs/ ./logs/
+COPY db/ ./db/
+
+RUN pip install fastapi uvicorn sqlalchemy
+
+CMD ["uvicorn", "backend.main_fastapi:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,75 @@
+version: '3.9'
+
+services:
+
+  frontend:
+    image: nginx:latest
+    container_name: frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    networks:
+      - cyberlab_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: backend
+    volumes:
+      - ./logs:/app/logs
+      - ./db:/app/db
+    ports:
+      - "8000:8000"
+    networks:
+      - cyberlab_net
+
+  waf:
+    build:
+      context: .
+      dockerfile: Dockerfile.waf
+    container_name: waf
+    ports:
+      - "8001:8001"
+    networks:
+      - cyberlab_net
+
+  sast:
+    build:
+      context: .
+      dockerfile: Dockerfile.sast
+    container_name: sast
+    ports:
+      - "8002:8002"
+    networks:
+      - cyberlab_net
+
+  csp:
+    build:
+      context: .
+      dockerfile: Dockerfile.csp
+    container_name: csp
+    ports:
+      - "8003:8003"
+    networks:
+      - cyberlab_net
+
+  attacker:
+    build:
+      context: .
+      dockerfile: Dockerfile.attacker
+    container_name: attacker
+    depends_on:
+      - backend
+    networks:
+      - cyberlab_net
+    command: ["python", "attacker/attack_script.py"]
+
+networks:
+  cyberlab_net:
+    driver: bridge
+
+volumes:
+  logs:
+  db:
