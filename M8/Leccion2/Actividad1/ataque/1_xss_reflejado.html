@@ -1,0 +1,13 @@
+<!-- Simulación de ataque XSS reflejado -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title>Ataque XSS</title>
+  </head>
+  <body>
+    <form action="http://localhost:5173" method="GET">
+      <input type="text" name="q" value='<script>alert("XSS desde atacante")</script>' />
+      <input type="submit" value="Ejecutar ataque XSS" />
+    </form>
+  </body>
+</html>

