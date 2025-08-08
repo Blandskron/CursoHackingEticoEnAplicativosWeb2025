@@ -11,3 +11,19 @@
     </form>
   </body>
 </html>
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Demostración CSRF segura</title></head>
+<body>
+  <!-- Simula cómo un atacante enviaría un POST cross-site -->
+  <form action="http://example.test/echo" method="POST">
+    <input type="hidden" name="action" value="delete_user">
+    <input type="hidden" name="user_id" value="3">
+    <button type="submit">Enviar petición simulada</button>
+  </form>
+  <p>Este formulario NO borra nada; solo demuestra el envío cross-site.</p>
+</body>
+</html>
