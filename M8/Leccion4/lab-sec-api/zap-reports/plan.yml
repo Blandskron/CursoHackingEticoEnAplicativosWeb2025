@@ -1,0 +1,32 @@
+env:
+  contexts:
+    - name: baseline
+      urls:
+        - http://api:8000/public/health
+  parameters:
+    failOnError: true
+    progressToStdout: true
+
+jobs:
+  - type: spider
+    parameters:
+      url: http://api:8000/public/health
+      maxDuration: 1
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 0
+
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk
+      reportFile: report.html
+      reportTitle: ZAP Scanning Report
+
+  - type: report
+    parameters:
+      template: traditional-xml
+      reportDir: /zap/wrk
+      reportFile: report.xml
+      reportTitle: ZAP Scanning Report

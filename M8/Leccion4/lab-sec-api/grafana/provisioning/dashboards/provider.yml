@@ -1,0 +1,9 @@
+apiVersion: 1
+providers:
+  - name: "Secure API"
+    orgId: 1
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards

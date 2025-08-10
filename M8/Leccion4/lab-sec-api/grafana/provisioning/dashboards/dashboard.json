@@ -1,0 +1,123 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "title": "Secure API – KPIs y Observabilidad",
+  "uid": "secure-api-kpis",
+  "tags": ["api", "security", "observability"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Tasa de errores 5xx (5m)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "401 vs 403 (por minuto, 1h)",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineWidth": 2 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_requests_total{status=\"401\"}[1m]))",
+          "legendFormat": "401 no autenticado",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(http_requests_total{status=\"403\"}[1m]))",
+          "legendFormat": "403 sin permiso",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latencia p95 (ms) por endpoint",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, handler)) * 1000",
+          "legendFormat": "{{handler}}",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests por segundo (por endpoint)",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_requests_total[1m])) by (handler)",
+          "legendFormat": "{{handler}}",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top rutas con 5xx (última hora)",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(http_requests_total{status=~\"5..\"}[1h])) by (handler, status)",
+          "format": "table",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": {}, "indexByName": {}, "renameByName": {} } }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Autenticaciones fallidas/h (si expones auth_failed_total)",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(auth_failed_total[1h]))",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "query",
+        "name": "endpoint",
+        "label": "Endpoint (handler)",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "query": "label_values(http_requests_total, handler)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  }
+}
