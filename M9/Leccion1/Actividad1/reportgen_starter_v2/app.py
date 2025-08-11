@@ -130,31 +130,85 @@ def preview():
 
 # ======= PDF ReportLab (fallback sin deps del sistema) =======
 def build_pdf_reportlab(data, out_path):
-    # Estilos
-    styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name="H1", fontSize=18, leading=22, spaceAfter=8))
-    styles.add(ParagraphStyle(name="H2", fontSize=14, leading=18, spaceBefore=12, spaceAfter=6))
-    styles.add(ParagraphStyle(name="Body", fontSize=11, leading=15, alignment=TA_JUSTIFY))
-    styles.add(ParagraphStyle(name="Meta", fontSize=10, leading=13))
-    styles.add(ParagraphStyle(name="Code", fontName="Courier", fontSize=9, leading=12))
+    # Imports locales para no romper si faltan módulos en otros entornos
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_JUSTIFY
+    from reportlab.lib.units import mm
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image, Preformatted
+    )
+    from reportlab.pdfgen import canvas as rl_canvas
+    from pathlib import Path
 
-    def header_footer(canvas, doc):
-        # Encabezado simple con marca
-        canvas.saveState()
-        logo_path = BASE_DIR / "static" / "img" / "logo-horizontal.png"
+    BASE_DIR_LOCAL = Path(__file__).resolve().parent
+
+    # ---------- estilos sin colisiones ----------
+    styles = getSampleStyleSheet()
+
+    def ensure_style(name, **kwargs):
+        if name in styles.byName:
+            # Si existe, solo actualizamos sus atributos clave
+            st = styles[name]
+            for k, v in kwargs.items():
+                setattr(st, k, v)
+        else:
+            styles.add(ParagraphStyle(name=name, **kwargs))
+
+    ensure_style("H1x", fontSize=18, leading=22, spaceAfter=8)
+    ensure_style("H2x", fontSize=14, leading=18, spaceBefore=12, spaceAfter=6)
+    ensure_style("BodyJustify", fontSize=11, leading=15, alignment=TA_JUSTIFY)
+    ensure_style("MetaText", fontSize=10, leading=13)
+    ensure_style("CodeBlock", fontName="Courier", fontSize=9, leading=12)
+
+    # ---------- header / footer con Página X de Y ----------
+    class NumberedCanvas(rl_canvas.Canvas):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._saved_page_states = []
+
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            super().showPage()
+
+        def save(self):
+            page_count = len(self._saved_page_states)
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self._draw_page_number(page_count)
+                super().showPage()
+            super().save()
+
+        def _draw_page_number(self, page_count):
+            self.setFont("Helvetica", 8)
+            self.setFillGray(0.4)
+            # pie de página
+            self.drawRightString(self._pagesize[0] - 20*mm, 12*mm,
+                                 f"Página {self._pageNumber} de {page_count}")
+
+    def header_footer(canv, doc):
+        canv.saveState()
+        # Encabezado con logo (si existe)
+        logo_path = BASE_DIR_LOCAL / "static" / "img" / "logo-horizontal.png"
         if logo_path.exists():
             try:
-                canvas.drawImage(str(logo_path), 20*mm, doc.height + doc.topMargin + 5*mm, width=40*mm, preserveAspectRatio=True, mask='auto')
+                canv.drawImage(str(logo_path),
+                               20*mm,
+                               doc.height + doc.topMargin + 5*mm,
+                               width=40*mm,
+                               preserveAspectRatio=True,
+                               mask='auto')
             except Exception:
                 pass
-        canvas.setFont("Helvetica", 8)
-        canvas.setFillGray(0.5)
-        canvas.drawRightString(doc.pagesize[0]-20*mm, doc.height + doc.topMargin + 12*mm, "Informe generado automáticamente")
-        # Pie de página con numeración
-        canvas.setFillGray(0.4)
-        canvas.drawRightString(doc.pagesize[0]-20*mm, 12*mm, f"Página {doc.page}")
-        canvas.restoreState()
+        canv.setFont("Helvetica", 8)
+        canv.setFillGray(0.5)
+        canv.drawRightString(doc.pagesize[0] - 20*mm,
+                             doc.height + doc.topMargin + 12*mm,
+                             "Informe generado automáticamente")
+        canv.restoreState()
 
+    # ---------- documento ----------
     doc = SimpleDocTemplate(
         str(out_path),
         pagesize=A4,
@@ -164,89 +218,89 @@ def build_pdf_reportlab(data, out_path):
 
     # Portada
     story.append(Spacer(1, 10*mm))
-    story.append(Paragraph(data.get("titulo",""), styles["H1"]))
-    story.append(Paragraph(data.get("subtitulo",""), styles["Body"]))
+    story.append(Paragraph(data.get("titulo", ""), styles["H1x"]))
+    story.append(Paragraph(data.get("subtitulo", ""), styles["BodyJustify"]))
     story.append(Spacer(1, 6*mm))
 
     # Tabla de metadatos
     meta = [
-        ["Organización", data.get("organizacion","")],
-        ["Autor", data.get("autor","")],
-        ["Fecha", data.get("fecha","")],
-        ["Versión", data.get("version","")],
-        ["Clasificación", data.get("clasificacion","")],
+        ["Organización", data.get("organizacion", "")],
+        ["Autor", data.get("autor", "")],
+        ["Fecha", data.get("fecha", "")],
+        ["Versión", data.get("version", "")],
+        ["Clasificación", data.get("clasificacion", "")],
     ]
     meta_tbl = Table(meta, colWidths=[40*mm, 120*mm])
     meta_tbl.setStyle(TableStyle([
-        ("GRID", (0,0), (-1,-1), 0.8, colors.black),
-        ("BACKGROUND", (0,0), (0,-1), colors.whitesmoke),
-        ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ("LEFTPADDING", (0,0), (-1,-1), 6),
-        ("RIGHTPADDING", (0,0), (-1,-1), 6),
-        ("TOPPADDING", (0,0), (-1,-1), 4),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+        ("GRID", (0, 0), (-1, -1), 0.8, colors.black),
+        ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(meta_tbl)
     story.append(Spacer(1, 4*mm))
     story.append(PageBreak())
 
     # Secciones
-    story.append(Paragraph("Resumen Ejecutivo", styles["H2"]))
-    story.append(Paragraph(data.get("resumen","").replace("\n","<br/>"), styles["Body"]))
+    story.append(Paragraph("Resumen Ejecutivo", styles["H2x"]))
+    story.append(Paragraph(data.get("resumen", "").replace("\n", "<br/>"), styles["BodyJustify"]))
     story.append(Spacer(1, 2*mm))
 
-    story.append(Paragraph("Descripción General del Entorno", styles["H2"]))
-    story.append(Paragraph(data.get("entorno","").replace("\n","<br/>"), styles["Body"]))
+    story.append(Paragraph("Descripción General del Entorno", styles["H2x"]))
+    story.append(Paragraph(data.get("entorno", "").replace("\n", "<br/>"), styles["BodyJustify"]))
     story.append(Spacer(1, 2*mm))
 
-    story.append(Paragraph("Principales Vulnerabilidades Detectadas", styles["H2"]))
-    findings = [["Hallazgo","Impacto","Criticidad","Recomendación"]] + data.get("tabla", [])
+    story.append(Paragraph("Principales Vulnerabilidades Detectadas", styles["H2x"]))
+    findings = [["Hallazgo", "Impacto", "Criticidad", "Recomendación"]] + data.get("tabla", [])
     widths = [40*mm, 60*mm, 20*mm, 40*mm]
     tbl = Table(findings, colWidths=widths, repeatRows=1)
     tbl.setStyle(TableStyle([
-        ("GRID", (0,0), (-1,-1), 0.8, colors.black),
-        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#e6eaf2")),
-        ("ALIGN", (0,0), (-1,0), "CENTER"),
-        ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ("LEFTPADDING", (0,0), (-1,-1), 6),
-        ("RIGHTPADDING", (0,0), (-1,-1), 6),
-        ("TOPPADDING", (0,0), (-1,-1), 4),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+        ("GRID", (0, 0), (-1, -1), 0.8, colors.black),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e6eaf2")),
+        ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(tbl)
     story.append(Spacer(1, 2*mm))
 
-    story.append(Paragraph(data.get("analisis_titulo","Análisis Detallado"), styles["H2"]))
+    story.append(Paragraph(data.get("analisis_titulo", "Análisis Detallado"), styles["H2x"]))
     kv = [
-        ["Descripción:", data.get("analisis_descripcion","")],
-        ["Herramientas:", data.get("analisis_herramientas","")],
-        ["Metodología:", data.get("analisis_metodologia","")],
+        ["Descripción:", data.get("analisis_descripcion", "")],
+        ["Herramientas:", data.get("analisis_herramientas", "")],
+        ["Metodología:", data.get("analisis_metodologia", "")],
     ]
     kv_tbl = Table(kv, colWidths=[30*mm, 130*mm])
     kv_tbl.setStyle(TableStyle([
-        ("GRID", (0,0), (-1,-1), 0.6, colors.black),
-        ("BACKGROUND", (0,0), (0,-1), colors.whitesmoke),
-        ("VALIGN", (0,0), (-1,-1), "TOP"),
+        ("GRID", (0, 0), (-1, -1), 0.6, colors.black),
+        ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]))
     story.append(kv_tbl)
     story.append(Spacer(1, 2*mm))
 
-    story.append(Paragraph("Evidencia", styles["H2"]))
-    story.append(Preformatted(data.get("analisis_evidencia",""), styles["Code"]))
+    story.append(Paragraph("Evidencia", styles["H2x"]))
+    story.append(Preformatted(data.get("analisis_evidencia", ""), styles["CodeBlock"]))
     story.append(Spacer(1, 2*mm))
 
-    story.append(Paragraph("Recomendaciones", styles["H2"]))
-    story.append(Paragraph(data.get("analisis_recomendaciones","").replace("\n","<br/>"), styles["Body"]))
+    story.append(Paragraph("Recomendaciones", styles["H2x"]))
+    story.append(Paragraph(data.get("analisis_recomendaciones", "").replace("\n", "<br/>"), styles["BodyJustify"]))
     story.append(Spacer(1, 2*mm))
 
-    story.append(Paragraph("Conclusiones", styles["H2"]))
-    story.append(Paragraph(data.get("conclusiones",""), styles["Body"]))
+    story.append(Paragraph("Conclusiones", styles["H2x"]))
+    story.append(Paragraph(data.get("conclusiones", ""), styles["BodyJustify"]))
     story.append(Spacer(1, 2*mm))
 
-    story.append(Paragraph("Recomendaciones Finales", styles["H2"]))
-    story.append(Paragraph(data.get("recomendaciones_finales","").replace("\n","<br/>"), styles["Body"]))
+    story.append(Paragraph("Recomendaciones Finales", styles["H2x"]))
+    story.append(Paragraph(data.get("recomendaciones_finales", "").replace("\n", "<br/>"), styles["BodyJustify"]))
 
-    doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+    doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer, canvasmaker=NumberedCanvas)
 
 @app.route("/export/pdf", methods=["POST"])
 def export_pdf():
