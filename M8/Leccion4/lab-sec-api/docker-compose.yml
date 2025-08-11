@@ -57,4 +57,4 @@ services:
     working_dir: /zap/wrk
     volumes:
       - ./zap-reports:/zap/wrk
-    command: ["zap.sh","-cmd","-autorun","/zap/wrk/plan.yaml"]
+    command: ["zap.sh","-cmd","-autorun","/zap/wrk/plan.yml"]
