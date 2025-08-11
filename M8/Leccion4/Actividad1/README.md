@@ -2,8 +2,6 @@
 
 Este laboratorio levanta una API de ejemplo con **observabilidad completa** (métricas, logs y trazas) y un **escaneo automatizado** con ZAP. La idea es mostrar cómo se conectan las piezas y dónde ver cada resultado.
 
----
-
 ## Arquitectura (visión rápida)
 
 ```
@@ -98,10 +96,6 @@ lab-sec-api/
 │  └─ plan.yml o plan.yaml    # Plan de ZAP (autorun) + reportes generados
 └─ docker-compose.yml
 ```
-
-> Nota: Asegúrate de que el nombre del plan de ZAP coincida con el usado en `docker-compose.yml` (por ejemplo, `plan.yaml`). Los reportes se escriben en esta misma carpeta.
-
----
 
 ## Puertos y rutas
 
