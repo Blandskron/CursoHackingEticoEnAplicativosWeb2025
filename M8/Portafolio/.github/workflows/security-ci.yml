@@ -1,0 +1,101 @@
+name: Security CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  sast-sonar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK (SonarQube scanner)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dproject.settings=security-tools/sonar/sonar-project.properties
+
+  sca-dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency-Check (OWASP)
+        run: |
+          bash security-tools/dependency-check/run.sh
+      - name: Publish SCA HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: security-tools/dependency-check/reports
+
+  trivy-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t pfm8/backend:ci ./backend
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: pfm8/backend:ci
+          format: 'table'
+          exit-code: '0' # no romper build para demo; pon '1' para gate
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  dast-zap:
+    runs-on: ubuntu-latest
+    services:
+      backend:
+        image: python:3.11-slim
+        ports: ['8000:8000']
+        options: >-
+          --health-cmd="curl -fsS http://localhost:8000/health || exit 1"
+          --health-interval=10s --health-timeout=5s --health-retries=30
+        env:
+          DATABASE_URL: postgresql+psycopg2://app:app@host.docker.internal:5432/appdb
+        # para CI puro, podrías usar sqlite; aquí levantamos un backend mínimo
+        command: >
+          bash -lc "
+          apt-get update && apt-get install -y gcc libpq-dev &&
+          pip install fastapi uvicorn[standard] SQLAlchemy psycopg2-binary prometheus-fastapi-instrumentator &&
+          python - <<'PY'
+from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
+app=FastAPI()
+Instrumentator().instrument(app).expose(app)
+@app.get('/health')
+def h(): return {'ok':True}
+import uvicorn; uvicorn.run(app,host='0.0.0.0',port=8000)
+PY
+          "
+    steps:
+      - uses: actions/checkout@v4
+      - name: ZAP Baseline
+        uses: zaproxy/action-baseline@v0.11.0
+        with:
+          target: 'http://localhost:8000'
+          cmd_options: '-I'
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-report
+          path: report_html.html
+
+  # Gate de aprobación manual simulado
+  manual-approval:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [sast-sonar, sca-dependency-check, trivy-image, dast-zap]
+    steps:
+      - name: Review required
+        run: echo "Revisar reportes y aprobar despliegue."

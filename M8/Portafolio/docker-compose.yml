@@ -1,0 +1,99 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16
+    container_name: pfm8_db
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: appdb
+    ports: ["5432:5432"]
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d appdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: pfm8_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://app:app@db:5432/appdb
+      APP_ENV: "dev"
+      # Deliberadamente inseguro para el laboratorio:
+      CORS_ALLOW_ORIGINS: "*" 
+      JWT_SECRET: "dev-secret"   # no rotado / no seguro (intencional)
+    ports: ["8000:8000"]
+    volumes:
+      - ./backend/app:/app/app
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: pfm8_sonarqube
+    ports: ["9000:9000"]
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_logs:/opt/sonarqube/logs
+
+  prometheus:
+    image: prom/prometheus
+    container_name: pfm8_prometheus
+    volumes:
+      - ./monitoring/prometheus-grafana/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana
+    container_name: pfm8_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports: ["3000:3000"]
+    volumes:
+      - ./monitoring/prometheus-grafana/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/prometheus-grafana/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
+  # --- Opcionales pesados: habilítalos si los necesitas ---
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false
+  #   ports: ["9200:9200"]
+  #   volumes: [ "es_data:/usr/share/elasticsearch/data" ]
+  #
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:8.14.1
+  #   ports: ["5601:5601"]
+  #   depends_on: [ elasticsearch ]
+  #
+  # wazuh:
+  #   image: wazuh/wazuh:4.7.5
+  #   ports: ["1514:1514", "1515:1515", "55000:55000"]
+
+volumes:
+  db_data:
+  sonar_data:
+  sonar_logs:
+  # es_data:
