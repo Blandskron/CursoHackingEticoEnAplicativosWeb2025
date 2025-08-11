@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Plantilla estandarizada de Informe</h1>
+<p class="muted">Completa los campos y genera un informe con diseño oficial Blandskron (PDF o Word).</p>
+
+<form method="post" action="/preview" class="grid-2">
+  <div class="card">
+    <h2>Portada</h2>
+    <label>Título <input type="text" name="titulo" value="{{ data.titulo }}"></label>
+    <label>Subtítulo <input type="text" name="subtitulo" value="{{ data.subtitulo }}"></label>
+    <div class="grid-2-compact">
+      <label>Organización <input type="text" name="organizacion" value="{{ data.organizacion }}"></label>
+      <label>Autor <input type="text" name="autor" value="{{ data.autor }}"></label>
+      <label>Fecha <input type="text" name="fecha" value="{{ data.fecha }}"></label>
+      <label>Versión <input type="text" name="version" value="{{ data.version }}"></label>
+      <label>Clasificación <input type="text" name="clasificacion" value="{{ data.clasificacion }}"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Resumen ejecutivo</h2>
+    <textarea name="resumen" rows="7">{{ data.resumen }}</textarea>
+  </div>
+
+  <div class="card">
+    <h2>Descripción general del entorno</h2>
+    <textarea name="entorno" rows="7">{{ data.entorno }}</textarea>
+  </div>
+
+  <div class="card">
+    <h2>Tabla de hallazgos (opcional)</h2>
+    <p class="muted">Pega filas con el formato: Hallazgo | Impacto | Criticidad | Recomendación</p>
+    <textarea name="tabla_raw" rows="6"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Análisis detallado</h2>
+    <label>Título <input type="text" name="analisis_titulo" value="{{ data.analisis_titulo }}"></label>
+    <label>Descripción <input type="text" name="analisis_descripcion" value="{{ data.analisis_descripcion }}"></label>
+    <label>Herramientas <input type="text" name="analisis_herramientas" value="{{ data.analisis_herramientas }}"></label>
+    <label>Metodología <input type="text" name="analisis_metodologia" value="{{ data.analisis_metodologia }}"></label>
+    <label>Evidencia <textarea name="analisis_evidencia" rows="5">{{ data.analisis_evidencia }}</textarea></label>
+    <label>Recomendaciones <textarea name="analisis_recomendaciones" rows="5">{{ data.analisis_recomendaciones }}</textarea></label>
+  </div>
+
+  <div class="card">
+    <h2>Conclusiones</h2>
+    <textarea name="conclusiones" rows="6">{{ data.conclusiones }}</textarea>
+  </div>
+
+  <div class="card">
+    <h2>Recomendaciones finales</h2>
+    <textarea name="recomendaciones_finales" rows="8">{{ data.recomendaciones_finales }}</textarea>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary" type="submit">Previsualizar</button>
+  </div>
+</form>
+{% endblock %}

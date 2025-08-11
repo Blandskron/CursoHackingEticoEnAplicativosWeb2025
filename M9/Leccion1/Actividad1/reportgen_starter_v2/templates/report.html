@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="report">
+  <section class="cover">
+    <img src="{{ url_for('static', filename='img/logo-icon.png') }}" class="cover-mark" alt="logo">
+    <h1>{{ data.titulo }}</h1>
+    <p class="subtitle">{{ data.subtitulo }}</p>
+    <table class="meta">
+      <tr><th>Organización</th><td>{{ data.organizacion }}</td></tr>
+      <tr><th>Autor</th><td>{{ data.autor }}</td></tr>
+      <tr><th>Fecha</th><td>{{ data.fecha }}</td></tr>
+      <tr><th>Versión</th><td>{{ data.version }}</td></tr>
+      <tr><th>Clasificación</th><td>{{ data.clasificacion }}</td></tr>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>Resumen Ejecutivo</h2>
+    <p class="justify">{{ data.resumen | replace('\n', '<br>') | safe }}</p>
+  </section>
+
+  <section class="section">
+    <h2>Descripción General del Entorno</h2>
+    <p class="justify">{{ data.entorno | replace('\n', '<br>') | safe }}</p>
+  </section>
+
+  <section class="section">
+    <h2>Principales Vulnerabilidades Detectadas</h2>
+    <table class="findings">
+      <thead>
+        <tr>
+          <th>Hallazgo</th><th>Impacto</th><th>Criticidad</th><th>Recomendación</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in data.tabla %}
+        <tr>
+          <td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td><td>{{ r[3] }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>{{ data.analisis_titulo }}</h2>
+    <div class="kv">
+      <div><strong>Descripción:</strong> {{ data.analisis_descripcion }}</div>
+      <div><strong>Herramientas:</strong> {{ data.analisis_herramientas }}</div>
+      <div><strong>Metodología:</strong> {{ data.analisis_metodologia }}</div>
+    </div>
+    <div class="evidence">
+      <div class="evidence-title">Evidencia</div>
+      <pre>{{ data.analisis_evidencia }}</pre>
+    </div>
+    <div class="recommend">
+      <div class="recommend-title">Recomendaciones</div>
+      <p class="justify">{{ data.analisis_recomendaciones | replace('\n', '<br>') | safe }}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Conclusiones</h2>
+    <p class="justify">{{ data.conclusiones }}</p>
+  </section>
+
+  <section class="section">
+    <h2>Recomendaciones Finales</h2>
+    <p class="justify">{{ data.recomendaciones_finales | replace('\n', '<br>') | safe }}</p>
+  </section>
+
+  <form method="post" action="/export/pdf">
+    {% for k, v in data.items() %}
+      {% if k != 'tabla' %}
+      <input type="hidden" name="{{k}}" value="{{v}}">
+      {% endif %}
+    {% endfor %}
+    <input type="hidden" name="tabla_raw" value="">
+    <div class="actions">
+      <button class="btn primary" type="submit">Descargar PDF</button>
+    </div>
+  </form>
+
+  <form method="post" action="/export/docx">
+    {% for k, v in data.items() %}
+      {% if k != 'tabla' %}
+      <input type="hidden" name="{{k}}" value="{{v}}">
+      {% endif %}
+    {% endfor %}
+    <input type="hidden" name="tabla_raw" value="">
+    <div class="actions">
+      <button class="btn" type="submit">Descargar Word</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

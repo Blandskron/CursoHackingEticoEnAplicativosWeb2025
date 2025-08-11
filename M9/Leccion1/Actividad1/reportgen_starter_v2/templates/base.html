@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or "Generador de Informes Blandskron" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <img src="{{ url_for('static', filename='img/logo-horizontal.png') }}" alt="Blandskron" class="logo">
+      <div class="header-right">
+        <span class="brand">Blandskron | Generador de Informes</span>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <span>&copy; {{ 2025 }} Blandskron. Generado automáticamente.</span>
+    </div>
+  </footer>
+</body>
+</html>
